@@ -11,19 +11,6 @@ from aiogram.client.default import DefaultBotProperties
 
 load_dotenv()
 
-locales = {
-    'welcome_message': {
-        'en': '',
-        'ru': '',
-        'uk': ''
-    },
-    'launch_button' : {
-        'en': '',
-        'ru': '',
-        'uk': ''
-    }
-}
-
 client = AsyncIOMotorClient(os.getenv('MONGO_URI'))
 db = client['teleforms']
 users_collection = db['users']
@@ -31,9 +18,29 @@ users_collection = db['users']
 bot = Bot(token=os.getenv('TOKEN'), default=DefaultBotProperties(parse_mode=ParseMode.HTML))
 dp = Dispatcher()
 
+translations = {
+    "ru": {
+        "start_message": "Привет, @{username}! 👋\nЯ помогу тебе быстро создать опрос и собрать ответы прямо здесь, в Telegram! 🎯",
+        "button_text": "Погнали! 🚀"
+    },
+    "en": {
+        "start_message": "Hello, @{username}! 👋\nI will help you quickly create a survey and collect responses right here in Telegram! 🎯",
+        "button_text": "Let's go! 🚀"
+    },
+    "uk": {
+        "start_message": "Привіт, @{username}! 👋\nЯ допоможу тобі швидко створити опитування та зібрати відповіді прямо тут, у Telegram! 🎯",
+        "button_text": "Почнемо! 🚀"
+    }
+}
+
+def get_translation(language_code: str, key: str, **kwargs):
+    lang = translations.get(language_code, translations["en"])
+    return lang[key].format(**kwargs)
+
 @dp.message(CommandStart())
 async def start(message: Message):
     user_id = message.from_user.id
+    language_code = message.from_user.language_code
 
     await users_collection.update_one(
         {'_id': user_id},
@@ -46,8 +53,11 @@ async def start(message: Message):
         upsert=True 
     )
 
-    await message.answer(f"Привет, @{message.from_user.username}! 👋\nЯ помогу тебе быстро создать опрос и собрать ответы прямо здесь, в Telegram! 🎯", reply_markup=InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="Погнали! 🚀", web_app=WebAppInfo(url="https://eesyquizy.vercel.app/"))]
+    start_message = get_translation(language_code, "start_message", username=message.from_user.username)
+    button_text = get_translation(language_code, "button_text")
+
+    await message.answer(start_message, reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(button_text, web_app=WebAppInfo(url="https://eesyquizy.vercel.app/"))]
     ]))
 
 async def main():
