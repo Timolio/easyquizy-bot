@@ -57,7 +57,7 @@ async def start(message: Message):
     button_text = get_translation(language_code, "button_text")
 
     await message.answer(start_message, reply_markup=InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text=button_text, web_app=WebAppInfo(url="https://eesyquizy.vercel.app/"))]
+        [InlineKeyboardButton(button_text, web_app=WebAppInfo(url="https://eesyquizy.vercel.app/"))]
     ]))
 
 async def main():
